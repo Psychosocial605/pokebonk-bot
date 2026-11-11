@@ -58,54 +58,75 @@ client.on('interactionCreate', async interaction => {
   // 2. Handle Dropdown Menu Selections (Select Menus)
   else if (interaction.isStringSelectMenu()) {
     try {
+      await interaction.deferUpdate();
+      const selectedValue = interaction.values[0];
+
       // Handle Elements Command Dropdowns
       if (interaction.customId === 'select_type_1' || interaction.customId === 'select_type_2') {
-        await interaction.deferUpdate();
-        
-        // Grab the current components/embed or parse state from the message
-        // For simplicity, we can re-evaluate based on the menus or store state. 
-        // Alternatively, you can grab selected values from the row components:
-        const row1 = interaction.message.components[0];
-        const row2 = interaction.message.components[1];
-
-        // Find selected values or fallback
         let type1 = 'Grass';
         let type2 = 'None';
 
-        // Read active selections from the menus
+        // Extract current defaults or selections from message components
         interaction.message.components.forEach(row => {
           row.components.forEach(comp => {
             if (comp.customId === 'select_type_1') {
-              const selectedOpt = comp.options.find(o => o.default) || comp.options[0];
-              // If user just changed it, check values
-              if (interaction.customId === 'select_type_1') {
-                type1 = interaction.values[0];
-              } else {
-                const defOpt = comp.options.find(o => o.default);
-                if (defOpt) type1 = defOpt.value;
-              }
+              const active = comp.options.find(o => o.default) || comp.options[0];
+              type1 = active.value;
             }
             if (comp.customId === 'select_type_2') {
-              if (interaction.customId === 'select_type_2') {
-                type2 = interaction.values[0];
-              } else {
-                const defOpt = comp.options.find(o => o.default);
-                if (defOpt) type2 = defOpt.value;
-              }
+              const active = comp.options.find(o => o.default) || comp.options[0];
+              type2 = active.value;
             }
           });
         });
 
-        // Re-import or call your build logic if shared, or update message directly.
-        // Quickest way: fetch the elements command file and run a helper or update response.
-        const elementsCommand = client.commands.get('elements');
-        // (Assuming you modularize or handle it here)
+        // Override with what the user just clicked
+        if (interaction.customId === 'select_type_1') type1 = selectedValue;
+        if (interaction.customId === 'select_type_2') type2 = selectedValue;
+
+        // Re-import elements command builder helper or execute update
+        const elementsCmd = require('./commands/elements.js');
+        if (typeof elementsCmd.buildEmbedAndComponents === 'function') {
+          const payload = elementsCmd.buildEmbedAndComponents(type1, type2);
+          await interaction.editReply(payload);
+        }
       }
       
       // Handle Map Command Dropdowns
       else if (interaction.customId === 'select_map_gen' || interaction.customId === 'select_map_location') {
-        await interaction.deferUpdate();
-        // Map updates can be handled similarly by reading the selected values
+        let currentGen = 'Gen 1';
+        let currentLocation = 'viridian-forest';
+
+        // Extract current defaults or selections from map message components
+        interaction.message.components.forEach(row => {
+          row.components.forEach(comp => {
+            if (comp.customId === 'select_map_gen') {
+              const active = comp.options.find(o => o.default) || comp.options[0];
+              currentGen = active.value;
+            }
+            if (comp.customId === 'select_map_location') {
+              const active = comp.options.find(o => o.default) || comp.options[0];
+              currentLocation = active.value;
+            }
+          });
+        });
+
+        // Override with what the user just clicked
+        if (interaction.customId === 'select_map_gen') {
+          currentGen = selectedValue;
+          // Reset location default to the first available map of the newly selected generation
+          if (currentGen === 'Gen 2') currentLocation = 'ilex-forest';
+          else currentLocation = 'viridian-forest';
+        }
+        if (interaction.customId === 'select_map_location') {
+          currentLocation = selectedValue;
+        }
+
+        const mapCmd = require('./commands/map.js');
+        if (typeof mapCmd.buildMapEmbedAndComponents === 'function') {
+          const payload = mapCmd.buildMapEmbedAndComponents(currentGen, currentLocation);
+          await interaction.editReply(payload);
+        }
       }
     } catch (error) {
       console.error('Error handling select menu:', error);

@@ -29,8 +29,19 @@ for (const file of commandFiles) {
   }
 }
 
+const { ActivityType } = require('discord.js');
+
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
+
+  // Set your bot's custom status message here!
+  client.user.setPresence({
+    activities: [{ 
+      name: 'Helping out the PokeBonkers', 
+      type: ActivityType.Playing // Options: Playing, Streaming, Listening, Watching, Competing
+    }],
+    status: 'online', // Options: online, idle, dnd, invisible
+  });
 });
 
 client.on('interactionCreate', async interaction => {

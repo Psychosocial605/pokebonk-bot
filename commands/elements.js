@@ -43,6 +43,7 @@ const BASE_MATRIX = {
   Fairy:    { Fighting:1.35, Poison:0.8, Steel:0.8, Fire:0.8, Dragon:1.35, Dark:1.35 }
 };
 
+// Calculate Defensive Matchups (Weaknesses & Resistances)
 function calculateMatchups(type1, type2) {
   const multipliers = {};
   const allTypes = Object.keys(BASE_MATRIX);
@@ -64,17 +65,50 @@ function calculateMatchups(type1, type2) {
   return { weakTo, resists };
 }
 
+// Calculate Offensive Matchups (What this type deals > 1.0 damage to)
+function calculateOffense(type1, type2) {
+  const strongAgainst = [];
+  const allTypes = Object.keys(BASE_MATRIX);
+
+  allTypes.forEach(defender => {
+    let mult1 = 1.0;
+    let mult2 = 1.0;
+
+    // Check multiplier dealt by type1 to defender
+    if (BASE_MATRIX[type1] && BASE_MATRIX[type1][defender] !== undefined) {
+      mult1 = BASE_MATRIX[type1][defender];
+    }
+    
+    // If dual type, check type2 as well
+    if (type2 !== 'None' && BASE_MATRIX[type2] && BASE_MATRIX[type2][defender] !== undefined) {
+      mult2 = BASE_MATRIX[type2][defender];
+    }
+
+    // Combine or take highest offensive advantage (> 1.0 means super effective in your matrix)
+    let offensiveMult = Math.max(mult1, mult2);
+    if (offensiveMult > 1.0) {
+      strongAgainst.push({ type: defender, mult: Number(offensiveMult.toFixed(2)) });
+    }
+  });
+
+  return strongAgainst;
+}
+
 function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
   const { weakTo, resists } = calculateMatchups(type1, type2);
+  const strongAgainst = calculateOffense(type1, type2);
 
   const weakStr = weakTo.length > 0 ? weakTo.map(w => `${TYPE_EMOJIS[w.type]} \`x${w.mult.toFixed(2)}\``).join('   ') : '`None`';
   const resistStr = resists.length > 0 ? resists.map(r => `${TYPE_EMOJIS[r.type]} \`x${r.mult.toFixed(2)}\``).join('   ') : '`None`';
+  const strongStr = strongAgainst.length > 0 ? strongAgainst.map(s => `${TYPE_EMOJIS[s.type]} \`x${s.mult.toFixed(2)}\``).join('   ') : '`None`';
+  
   const titleTypes = type2 !== 'None' ? `${TYPE_EMOJIS[type1]} ${type1} / ${TYPE_EMOJIS[type2]} ${type2}` : `${TYPE_EMOJIS[type1]} ${type1}`;
 
   const embed = new EmbedBuilder()
     .setColor(0x3498DB)
     .setTitle(`🛡️ Pokebonk Matchups — ${titleTypes}`)
     .addFields(
+      { name: '⚔️ STRONG AGAINST', value: strongStr, inline: false },
       { name: '🔻 WEAK TO', value: weakStr, inline: false },
       { name: '🛡️ RESISTS', value: resistStr, inline: false }
     )
@@ -96,7 +130,7 @@ function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('elements')
-    .setDescription('Check element type weaknesses and strengths interactively.')
+    .setDescription('Check element type weaknesses, strengths, and resistances interactively.')
     .addStringOption(option => option.setName('type1').setDescription('Select primary type').setRequired(false))
     .addStringOption(option => option.setName('type2').setDescription('Select secondary type').setRequired(false)),
 

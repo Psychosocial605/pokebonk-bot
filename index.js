@@ -4,7 +4,6 @@ const express = require('express');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 require('dotenv').config();
 
-// Initialize Express server for Render port-binding
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -16,14 +15,12 @@ app.listen(PORT, () => {
   console.log(`🌍 Web server is listening on port ${PORT}`);
 });
 
-// Initialize Discord Client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-// Load all command files dynamically
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = require(filePath);
@@ -36,9 +33,7 @@ client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-// Handle Interactions (Slash Commands & Dropdown Menus)
 client.on('interactionCreate', async interaction => {
-  // 1. Handle Slash Commands
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
@@ -55,18 +50,17 @@ client.on('interactionCreate', async interaction => {
       }
     }
   } 
-  // 2. Handle Dropdown Menu Selections (Select Menus)
   else if (interaction.isStringSelectMenu()) {
     try {
       await interaction.deferUpdate();
       const selectedValue = interaction.values[0];
 
-      // Handle Elements Command Dropdowns
+      // Elements Dropdowns
       if (interaction.customId === 'select_type_1' || interaction.customId === 'select_type_2') {
         let type1 = 'Grass';
         let type2 = 'None';
 
-        // Extract current defaults or selections from message components
+        // Read current selections from the message menus if available
         interaction.message.components.forEach(row => {
           row.components.forEach(comp => {
             if (comp.customId === 'select_type_1') {
@@ -80,24 +74,20 @@ client.on('interactionCreate', async interaction => {
           });
         });
 
-        // Override with what the user just clicked
         if (interaction.customId === 'select_type_1') type1 = selectedValue;
         if (interaction.customId === 'select_type_2') type2 = selectedValue;
 
-        // Re-import elements command builder helper or execute update
-        const elementsCmd = require('./commands/elements.js');
-        if (typeof elementsCmd.buildEmbedAndComponents === 'function') {
-          const payload = elementsCmd.buildEmbedAndComponents(type1, type2);
-          await interaction.editReply(payload);
+        const elementsCmd = client.commands.get('elements');
+        if (elementsCmd && typeof elementsCmd.buildEmbedAndComponents === 'function') {
+          await interaction.editReply(elementsCmd.buildEmbedAndComponents(type1, type2));
         }
       }
       
-      // Handle Map Command Dropdowns
+      // Map Dropdowns
       else if (interaction.customId === 'select_map_gen' || interaction.customId === 'select_map_location') {
         let currentGen = 'Gen 1';
         let currentLocation = 'viridian-forest';
 
-        // Extract current defaults or selections from map message components
         interaction.message.components.forEach(row => {
           row.components.forEach(comp => {
             if (comp.customId === 'select_map_gen') {
@@ -111,21 +101,16 @@ client.on('interactionCreate', async interaction => {
           });
         });
 
-        // Override with what the user just clicked
         if (interaction.customId === 'select_map_gen') {
           currentGen = selectedValue;
-          // Reset location default to the first available map of the newly selected generation
-          if (currentGen === 'Gen 2') currentLocation = 'ilex-forest';
-          else currentLocation = 'viridian-forest';
-        }
-        if (interaction.customId === 'select_map_location') {
+          currentLocation = currentGen === 'Gen 2' ? 'ilex-forest' : 'viridian-forest';
+        } else if (interaction.customId === 'select_map_location') {
           currentLocation = selectedValue;
         }
 
-        const mapCmd = require('./commands/map.js');
-        if (typeof mapCmd.buildMapEmbedAndComponents === 'function') {
-          const payload = mapCmd.buildMapEmbedAndComponents(currentGen, currentLocation);
-          await interaction.editReply(payload);
+        const mapCmd = client.commands.get('map');
+        if (mapCmd && typeof mapCmd.buildMapEmbedAndComponents === 'function') {
+          await interaction.editReply(mapCmd.buildMapEmbedAndComponents(currentGen, currentLocation));
         }
       }
     } catch (error) {
@@ -134,5 +119,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Log into Discord using your environment variable
 client.login(process.env.DISCORD_TOKEN);

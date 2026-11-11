@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
-// Custom Server Emojis Registry
 const TYPE_EMOJIS = {
   Normal: "<:Normal:1570116937336361042>",
   Fighting: "<:Fighting:1570116778728882276>",
@@ -22,67 +21,18 @@ const TYPE_EMOJIS = {
   Fairy: "<:Fairy:1570116757849640990>"
 };
 
-// Map Data organized by Generation
 const GENERATION_MAPS = {
   "Gen 1": {
-    "viridian-forest": {
-      name: "Viridian Forest",
-      types: ["Bug", "Grass", "Normal", "Flying"],
-      recommended: ["Fire", "Flying", "Rock", "Ice"],
-      avoid: ["Ground", "Water", "Grass"],
-      description: "Lush woodland filled with swarming bug and grass types, often backed by poison sub-types."
-    },
-    "rocky-desert": {
-      name: "Rocky Desert",
-      types: ["Ground", "Rock", "Fighting"],
-      recommended: ["Water", "Grass", "Ice", "Psychic"],
-      avoid: ["Electric", "Rock", "Fire"],
-      description: "Scorching sand, rock cannons and blinding storms."
-    },
-    "storm-coast": {
-      name: "Storm Coast",
-      types: ["Water", "Electric", "Flying"],
-      recommended: ["Ground", "Grass", "Electric", "Rock"],
-      avoid: ["Water", "Flying", "Steel"],
-      description: "Beaches, reefs and electrical storms over the sea. Watch out for the tide."
-    },
-    "celestial-glacier": {
-      name: "Celestial Glacier",
-      types: ["Ice", "Water", "Psychic"],
-      recommended: ["Fire", "Fighting", "Bug", "Dark", "Ghost"],
-      avoid: ["Ice", "Water", "Psychic", "Dragon"],
-      description: "Eternal ice beneath auroras. Frozen lakes are slippery and the cold freezes even attacks."
-    },
-    "cinnabar-island": {
-      name: "Cinnabar Island",
-      types: ["Fire", "Poison", "Rock"],
-      recommended: ["Water", "Ground", "Psychic"],
-      avoid: ["Fire", "Grass", "Bug", "Fairy", "Poison"],
-      description: "A smoking volcano in the middle of the sea, rivers of lava and hot springs. Something terrible was born on this island."
-    },
-    "cerulean-cave": {
-      name: "Cerulean Cave",
-      types: ["Psychic", "Rock", "Ground"],
-      recommended: ["Water", "Grass", "Ice", "Bug", "Ghost", "Dark"],
-      avoid: ["Psychic", "Poison", "Electric"],
-      description: "A crystal cavern beneath Cerulean City. The strongest Pokémon in Kanto live here... and something much worse."
-    }
+    "viridian-forest": { name: "Viridian Forest", types: ["Bug", "Grass", "Normal", "Flying"], recommended: ["Fire", "Flying", "Rock", "Ice"], avoid: ["Ground", "Water", "Grass"], description: "Lush woodland filled with swarming bug and grass types, often backed by poison sub-types." },
+    "rocky-desert": { name: "Rocky Desert", types: ["Ground", "Rock", "Fighting"], recommended: ["Water", "Grass", "Ice", "Psychic"], avoid: ["Electric", "Rock", "Fire"], description: "Scorching sand, rock cannons and blinding storms." },
+    "storm-coast": { name: "Storm Coast", types: ["Water", "Electric", "Flying"], recommended: ["Ground", "Grass", "Electric", "Rock"], avoid: ["Water", "Flying", "Steel"], description: "Beaches, reefs and electrical storms over the sea. Watch out for the tide." },
+    "celestial-glacier": { name: "Celestial Glacier", types: ["Ice", "Water", "Psychic"], recommended: ["Fire", "Fighting", "Bug", "Dark", "Ghost"], avoid: ["Ice", "Water", "Psychic", "Dragon"], description: "Eternal ice beneath auroras. Frozen lakes are slippery and the cold freezes even attacks." },
+    "cinnabar-island": { name: "Cinnabar Island", types: ["Fire", "Poison", "Rock"], recommended: ["Water", "Ground", "Psychic"], avoid: ["Fire", "Grass", "Bug", "Fairy", "Poison"], description: "A smoking volcano in the middle of the sea, rivers of lava and hot springs. Something terrible was born on this island." },
+    "cerulean-cave": { name: "Cerulean Cave", types: ["Psychic", "Rock", "Ground"], recommended: ["Water", "Grass", "Ice", "Bug", "Ghost", "Dark"], avoid: ["Psychic", "Poison", "Electric"], description: "A crystal cavern beneath Cerulean City. The strongest Pokémon in Kanto live here... and something much worse." }
   },
   "Gen 2": {
-    "ilex-forest": {
-      name: "Ilex Forest",
-      types: ["Bug", "Fairy", "Psychic"],
-      recommended: ["Steel", "Poison", "Fire", "Flying", "Ghost", "Dark"],
-      avoid: ["Fighting", "Dragon", "Psychic"],
-      description: "Millenary trees and a wooden shrine. They say time doesn't always flow in the same direction here."
-    },
-    "ecruteak-city": {
-      name: "Ecruteak City",
-      types: ["Ghost", "Fire", "Normal"],
-      recommended: ["Dark", "Water", "Ground", "Rock", "Fighting"],
-      avoid: ["Ghost", "Psychic", "Normal", "Grass", "Bug", "Steel", "Ice"],
-      description: "Red maples, the ruined Burned Tower and, on the horizon, the Tin Tower. Legendary beasts roam here."
-    }
+    "ilex-forest": { name: "Ilex Forest", types: ["Bug", "Fairy", "Psychic"], recommended: ["Steel", "Poison", "Fire", "Flying", "Ghost", "Dark"], avoid: ["Fighting", "Dragon", "Psychic"], description: "Millenary trees and a wooden shrine. They say time doesn't always flow in the same direction here." },
+    "ecruteak-city": { name: "Ecruteak City", types: ["Ghost", "Fire", "Normal"], recommended: ["Dark", "Water", "Ground", "Rock", "Fighting"], avoid: ["Ghost", "Psychic", "Normal", "Grass", "Bug", "Steel", "Ice"], description: "Red maples, the ruined Burned Tower and, on the horizon, the Tin Tower. Legendary beasts roam here." }
   }
 };
 
@@ -108,63 +58,28 @@ function buildMapEmbedAndComponents(selectedGen = "Gen 1", selectedMapKey = "vir
   const genMenu = new StringSelectMenuBuilder()
     .setCustomId('select_map_gen')
     .setPlaceholder('Select Generation')
-    .addOptions(
-      Object.keys(GENERATION_MAPS).map(gen => ({
-        label: gen,
-        value: gen,
-        default: gen === selectedGen
-      }))
-    );
+    .addOptions(Object.keys(GENERATION_MAPS).map(gen => ({ label: gen, value: gen, default: gen === selectedGen })));
 
   const mapMenu = new StringSelectMenuBuilder()
     .setCustomId('select_map_location')
     .setPlaceholder('Select Map Location')
-    .addOptions(
-      Object.entries(genData).map(([key, data]) => ({
-        label: data.name,
-        value: key,
-        default: key === selectedMapKey
-      }))
-    );
+    .addOptions(Object.entries(genData).map(([key, data]) => ({ label: data.name, value: key, default: key === selectedMapKey })));
 
-  const row1 = new ActionRowBuilder().addComponents(genMenu);
-  const row2 = new ActionRowBuilder().addComponents(mapMenu);
-
-  return { embeds: [embed], components: [row1, row2] };
+  return { embeds: [embed], components: [new ActionRowBuilder().addComponents(genMenu), new ActionRowBuilder().addComponents(mapMenu)] };
 }
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('map')
     .setDescription('View tactical type recommendations by generation and map.')
-    .addStringOption(option =>
-      option.setName('generation')
-        .setDescription('Select game generation')
-        .setRequired(false)
-        .addChoices(
-          { name: 'Gen 1', value: 'Gen 1' },
-          { name: 'Gen 2', value: 'Gen 2' }
-        ))
-    .addStringOption(option =>
-      option.setName('location')
-        .setDescription('Select map location')
-        .setRequired(false)
-        .addChoices(
-          { name: 'Viridian Forest', value: 'viridian-forest' },
-          { name: 'Rocky Desert', value: 'rocky-desert' },
-          { name: 'Storm Coast', value: 'storm-coast' },
-          { name: 'Celestial Glacier', value: 'celestial-glacier' },
-          { name: 'Cinnabar Island', value: 'cinnabar-island' },
-          { name: 'Cerulean Cave', value: 'cerulean-cave' },
-          { name: 'Ilex Forest', value: 'ilex-forest' },
-          { name: 'Ecruteak City', value: 'ecruteak-city' }
-        )),
+    .addStringOption(option => option.setName('generation').setDescription('Select game generation').setRequired(false).addChoices({ name: 'Gen 1', value: 'Gen 1' }, { name: 'Gen 2', value: 'Gen 2' }))
+    .addStringOption(option => option.setName('location').setDescription('Select map location').setRequired(false)),
 
   async execute(interaction) {
     const gen = interaction.options.getString('generation') || 'Gen 1';
     const location = interaction.options.getString('location') || 'viridian-forest';
-
-    const payload = buildMapEmbedAndComponents(gen, location);
-    await interaction.reply(payload);
+    await interaction.reply(buildMapEmbedAndComponents(gen, location));
   },
+
+  buildMapEmbedAndComponents
 };

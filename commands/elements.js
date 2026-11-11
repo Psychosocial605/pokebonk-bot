@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
-// Custom Server Emojis Registry
 const TYPE_EMOJIS = {
   Normal: "<:Normal:1570116937336361042>",
   Fighting: "<:Fighting:1570116778728882276>",
@@ -44,51 +43,33 @@ const BASE_MATRIX = {
   Fairy:    { Fighting:1.35, Poison:0.8, Steel:0.8, Fire:0.8, Dragon:1.35, Dark:1.35 }
 };
 
-// Calculation function to compute weaknesses and resistances based on type combination
 function calculateMatchups(type1, type2) {
   const multipliers = {};
   const allTypes = Object.keys(BASE_MATRIX);
 
   allTypes.forEach(attacker => {
     let mult = 1.0;
-    if (BASE_MATRIX[attacker][type1] !== undefined) {
-      mult *= BASE_MATRIX[attacker][type1];
-    }
-    if (type2 !== 'None' && BASE_MATRIX[attacker][type2] !== undefined) {
-      mult *= BASE_MATRIX[attacker][type2];
-    }
-    // Clamp to rules [0.40 - 1.80]
+    if (BASE_MATRIX[attacker][type1] !== undefined) mult *= BASE_MATRIX[attacker][type1];
+    if (type2 !== 'None' && BASE_MATRIX[attacker][type2] !== undefined) mult *= BASE_MATRIX[attacker][type2];
     mult = Math.max(0.40, Math.min(1.80, Number(mult.toFixed(2))));
-    if (mult !== 1.0) {
-      multipliers[attacker] = mult;
-    }
+    if (mult !== 1.0) multipliers[attacker] = mult;
   });
 
   const weakTo = [];
   const resists = [];
-
   for (const [t, m] of Object.entries(multipliers)) {
     if (m > 1.0) weakTo.push({ type: t, mult: m });
     if (m < 1.0) resists.push({ type: t, mult: m });
   }
-
   return { weakTo, resists };
 }
 
 function buildEmbedAndComponents(type1, type2) {
   const { weakTo, resists } = calculateMatchups(type1, type2);
 
-  const weakStr = weakTo.length > 0 
-    ? weakTo.map(w => `${TYPE_EMOJIS[w.type]} \`x${w.mult.toFixed(2)}\``).join('   ') 
-    : '`None`';
-
-  const resistStr = resists.length > 0 
-    ? resists.map(r => `${TYPE_EMOJIS[r.type]} \`x${r.mult.toFixed(2)}\``).join('   ') 
-    : '`None`';
-
-  const titleTypes = type2 !== 'None' 
-    ? `${TYPE_EMOJIS[type1]} ${type1} / ${TYPE_EMOJIS[type2]} ${type2}` 
-    : `${TYPE_EMOJIS[type1]} ${type1}`;
+  const weakStr = weakTo.length > 0 ? weakTo.map(w => `${TYPE_EMOJIS[w.type]} \`x${w.mult.toFixed(2)}\``).join('   ') : '`None`';
+  const resistStr = resists.length > 0 ? resists.map(r => `${TYPE_EMOJIS[r.type]} \`x${r.mult.toFixed(2)}\``).join('   ') : '`None`';
+  const titleTypes = type2 !== 'None' ? `${TYPE_EMOJIS[type1]} ${type1} / ${TYPE_EMOJIS[type2]} ${type2}` : `${TYPE_EMOJIS[type1]} ${type1}`;
 
   const embed = new EmbedBuilder()
     .setColor(0x3498DB)
@@ -102,49 +83,28 @@ function buildEmbedAndComponents(type1, type2) {
   const primaryMenu = new StringSelectMenuBuilder()
     .setCustomId('select_type_1')
     .setPlaceholder('Select Primary Type')
-    .addOptions(
-      Object.keys(BASE_MATRIX).map(t => ({
-        label: t,
-        value: t,
-        default: t === type1
-      }))
-    );
+    .addOptions(Object.keys(BASE_MATRIX).map(t => ({ label: t, value: t, default: t === type1 })));
 
   const secondaryMenu = new StringSelectMenuBuilder()
     .setCustomId('select_type_2')
     .setPlaceholder('Select Secondary Type')
-    .addOptions(
-      [{ label: 'None', value: 'None', default: type2 === 'None' }, ...Object.keys(BASE_MATRIX).map(t => ({
-        label: t,
-        value: t,
-        default: t === type2
-      }))]
-    );
+    .addOptions([{ label: 'None', value: 'None', default: type2 === 'None' }, ...Object.keys(BASE_MATRIX).map(t => ({ label: t, value: t, default: t === type2 }))]);
 
-  const row1 = new ActionRowBuilder().addComponents(primaryMenu);
-  const row2 = new ActionRowBuilder().addComponents(secondaryMenu);
-
-  return { embeds: [embed], components: [row1, row2] };
+  return { embeds: [embed], components: [new ActionRowBuilder().addComponents(primaryMenu), new ActionRowBuilder().addComponents(secondaryMenu)] };
 }
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('elements')
     .setDescription('Check element type weaknesses and strengths interactively.')
-    .addStringOption(option =>
-      option.setName('type1')
-        .setDescription('Select primary type')
-        .setRequired(false))
-    .addStringOption(option =>
-      option.setName('type2')
-        .setDescription('Select secondary type')
-        .setRequired(false)),
+    .addStringOption(option => option.setName('type1').setDescription('Select primary type').setRequired(false))
+    .addStringOption(option => option.setName('type2').setDescription('Select secondary type').setRequired(false)),
 
   async execute(interaction) {
     const type1 = interaction.options.getString('type1') || 'Grass';
     const type2 = interaction.options.getString('type2') || 'None';
-
-    const payload = buildEmbedAndComponents(type1, type2);
-    await interaction.reply(payload);
+    await interaction.reply(buildEmbedAndComponents(type1, type2));
   },
+
+  buildEmbedAndComponents
 };

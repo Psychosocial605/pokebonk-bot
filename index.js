@@ -60,20 +60,16 @@ client.on('interactionCreate', async interaction => {
         let type1 = 'Grass';
         let type2 = 'None';
 
-        // Read current selections from the message menus if available
+        // Inspect existing options to see which one was marked as default
         interaction.message.components.forEach(row => {
           row.components.forEach(comp => {
-            if (comp.customId === 'select_type_1') {
-              const active = comp.options.find(o => o.default) || comp.options[0];
-              type1 = active.value;
-            }
-            if (comp.customId === 'select_type_2') {
-              const active = comp.options.find(o => o.default) || comp.options[0];
-              type2 = active.value;
-            }
+            const activeOpt = comp.options.find(o => o.default);
+            if (comp.customId === 'select_type_1' && activeOpt) type1 = activeOpt.value;
+            if (comp.customId === 'select_type_2' && activeOpt) type2 = activeOpt.value;
           });
         });
 
+        // Apply the newly chosen value to whichever menu was interacted with
         if (interaction.customId === 'select_type_1') type1 = selectedValue;
         if (interaction.customId === 'select_type_2') type2 = selectedValue;
 
@@ -90,19 +86,15 @@ client.on('interactionCreate', async interaction => {
 
         interaction.message.components.forEach(row => {
           row.components.forEach(comp => {
-            if (comp.customId === 'select_map_gen') {
-              const active = comp.options.find(o => o.default) || comp.options[0];
-              currentGen = active.value;
-            }
-            if (comp.customId === 'select_map_location') {
-              const active = comp.options.find(o => o.default) || comp.options[0];
-              currentLocation = active.value;
-            }
+            const activeOpt = comp.options.find(o => o.default);
+            if (comp.customId === 'select_map_gen' && activeOpt) currentGen = activeOpt.value;
+            if (comp.customId === 'select_map_location' && activeOpt) currentLocation = activeOpt.value;
           });
         });
 
         if (interaction.customId === 'select_map_gen') {
           currentGen = selectedValue;
+          // Set a valid default map for the chosen generation
           currentLocation = currentGen === 'Gen 2' ? 'ilex-forest' : 'viridian-forest';
         } else if (interaction.customId === 'select_map_location') {
           currentLocation = selectedValue;

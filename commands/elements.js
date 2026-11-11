@@ -22,7 +22,6 @@ const TYPE_EMOJIS = {
   None: "❌"
 };
 
-// Type Color Palette (HEX code numbers)
 const TYPE_COLORS = {
   Normal: 0x9FA19F,
   Fighting: 0xFF8000,
@@ -66,6 +65,7 @@ const BASE_MATRIX = {
   Fairy:    { Fighting:1.35, Poison:0.8, Steel:0.8, Fire:0.8, Dragon:1.35, Dark:1.35 }
 };
 
+// Calculate Defensive Matchups (Weaknesses & Resistances)
 function calculateMatchups(type1, type2) {
   const multipliers = {};
   const allTypes = Object.keys(BASE_MATRIX);
@@ -87,12 +87,14 @@ function calculateMatchups(type1, type2) {
   return { weakTo, resists };
 }
 
+// Calculate Offensive Matchups (Strong Against) using robust numeric evaluation
 function calculateOffense(type1, type2) {
   const strongMap = {};
+
   const addEffectiveForType = (t) => {
     if (!BASE_MATRIX[t]) return;
     for (const [defender, mult] of Object.entries(BASE_MATRIX[t])) {
-      if (mult === 1.35) {
+      if (mult > 1.0) {
         if (!strongMap[defender] || mult > strongMap[defender]) {
           strongMap[defender] = mult;
         }
@@ -118,8 +120,6 @@ function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
   const strongStr = strongAgainst.length > 0 ? strongAgainst.map(s => `${TYPE_EMOJIS[s.type]} \`x${s.mult.toFixed(2)}\``).join('   ') : '`None`';
   
   const titleTypes = type2 !== 'None' ? `${TYPE_EMOJIS[type1]} ${type1} / ${TYPE_EMOJIS[type2]} ${type2}` : `${TYPE_EMOJIS[type1]} ${type1}`;
-
-  // Use primary type's color for the embed border, fallback to secondary if primary is none
   const embedColor = TYPE_COLORS[type1] || TYPE_COLORS[type2] || 0x3498DB;
 
   const embed = new EmbedBuilder()

@@ -65,7 +65,7 @@ function calculateMatchups(type1, type2) {
   return { weakTo, resists };
 }
 
-// Calculate Offensive Matchups (What this type deals > 1.0 damage to)
+// Calculate Offensive Matchups (Strong Against)
 function calculateOffense(type1, type2) {
   const strongAgainst = [];
   const allTypes = Object.keys(BASE_MATRIX);
@@ -74,17 +74,13 @@ function calculateOffense(type1, type2) {
     let mult1 = 1.0;
     let mult2 = 1.0;
 
-    // Check multiplier dealt by type1 to defender
     if (BASE_MATRIX[type1] && BASE_MATRIX[type1][defender] !== undefined) {
       mult1 = BASE_MATRIX[type1][defender];
     }
-    
-    // If dual type, check type2 as well
     if (type2 !== 'None' && BASE_MATRIX[type2] && BASE_MATRIX[type2][defender] !== undefined) {
       mult2 = BASE_MATRIX[type2][defender];
     }
 
-    // Combine or take highest offensive advantage (> 1.0 means super effective in your matrix)
     let offensiveMult = Math.max(mult1, mult2);
     if (offensiveMult > 1.0) {
       strongAgainst.push({ type: defender, mult: Number(offensiveMult.toFixed(2)) });
@@ -108,9 +104,9 @@ function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
     .setColor(0x3498DB)
     .setTitle(`🛡️ Pokebonk Matchups — ${titleTypes}`)
     .addFields(
-      { name: '⚔️ STRONG AGAINST', value: strongStr, inline: false },
       { name: '🔻 WEAK TO', value: weakStr, inline: false },
-      { name: '🛡️ RESISTS', value: resistStr, inline: false }
+      { name: '🛡️ RESISTS', value: resistStr, inline: false },
+      { name: '⚔️ STRONG AGAINST', value: strongStr, inline: false }
     )
     .setFooter({ text: 'PokeBonk Rules • Clamped [x0.40 - x1.80]' });
 
@@ -130,7 +126,7 @@ function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('elements')
-    .setDescription('Check element type weaknesses, strengths, and resistances interactively.')
+    .setDescription('Check element type weaknesses, resistances, and strengths interactively.')
     .addStringOption(option => option.setName('type1').setDescription('Select primary type').setRequired(false))
     .addStringOption(option => option.setName('type2').setDescription('Select secondary type').setRequired(false)),
 

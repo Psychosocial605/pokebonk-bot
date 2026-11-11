@@ -11,6 +11,18 @@ const {
   ActivityType 
 } = require('discord.js');
 
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('🤖 Pokebonk Bot is alive and running!');
+});
+
+app.listen(PORT, () => {
+  console.log(`🌍 Web server is listening on port ${PORT}`);
+});
+
 // 1. Data Structures & Multipliers
 const TYPES = [
   "Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost",

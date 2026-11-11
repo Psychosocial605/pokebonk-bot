@@ -22,6 +22,29 @@ const TYPE_EMOJIS = {
   None: "❌"
 };
 
+// Type Color Palette (HEX code numbers)
+const TYPE_COLORS = {
+  Normal: 0x9FA19F,
+  Fighting: 0xFF8000,
+  Flying: 0x81B9EF,
+  Poison: 0x9141CB,
+  Ground: 0x915121,
+  Rock: 0xafa981,
+  Bug: 0x91A119,
+  Ghost: 0x704170,
+  Steel: 0x60A1B8,
+  Fire: 0xE62829,
+  Water: 0x2980EF,
+  Grass: 0x3FA129,
+  Electric: 0xFAC000,
+  Psychic: 0xEF4179,
+  Ice: 0x3FD8FF,
+  Dragon: 0x5060E1,
+  Dark: 0x50413F,
+  Fairy: 0xEF70EF,
+  None: 0x3498DB
+};
+
 const BASE_MATRIX = {
   Normal:   { Rock:0.8, Ghost:0.5, Steel:0.8 },
   Fighting: { Normal:1.35, Flying:0.8, Poison:0.8, Rock:1.35, Bug:0.8, Ghost:0.5, Psychic:0.8, Ice:1.35, Dark:1.35, Fairy:0.8 },
@@ -43,7 +66,6 @@ const BASE_MATRIX = {
   Fairy:    { Fighting:1.35, Poison:0.8, Steel:0.8, Fire:0.8, Dragon:1.35, Dark:1.35 }
 };
 
-// Calculate Defensive Matchups (Weaknesses & Resistances)
 function calculateMatchups(type1, type2) {
   const multipliers = {};
   const allTypes = Object.keys(BASE_MATRIX);
@@ -65,14 +87,11 @@ function calculateMatchups(type1, type2) {
   return { weakTo, resists };
 }
 
-// Calculate Offensive Matchups (Strong Against) using exact 1.35x offensive lookup
 function calculateOffense(type1, type2) {
   const strongMap = {};
-
   const addEffectiveForType = (t) => {
     if (!BASE_MATRIX[t]) return;
     for (const [defender, mult] of Object.entries(BASE_MATRIX[t])) {
-      // In Pokebonk charts, offensive effectiveness is 1.35x
       if (mult === 1.35) {
         if (!strongMap[defender] || mult > strongMap[defender]) {
           strongMap[defender] = mult;
@@ -82,9 +101,7 @@ function calculateOffense(type1, type2) {
   };
 
   addEffectiveForType(type1);
-  if (type2 !== 'None') {
-    addEffectiveForType(type2);
-  }
+  if (type2 !== 'None') addEffectiveForType(type2);
 
   return Object.entries(strongMap).map(([type, mult]) => ({
     type,
@@ -102,8 +119,11 @@ function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
   
   const titleTypes = type2 !== 'None' ? `${TYPE_EMOJIS[type1]} ${type1} / ${TYPE_EMOJIS[type2]} ${type2}` : `${TYPE_EMOJIS[type1]} ${type1}`;
 
+  // Use primary type's color for the embed border, fallback to secondary if primary is none
+  const embedColor = TYPE_COLORS[type1] || TYPE_COLORS[type2] || 0x3498DB;
+
   const embed = new EmbedBuilder()
-    .setColor(0x3498DB)
+    .setColor(embedColor)
     .setTitle(`🛡️ Pokebonk Matchups — ${titleTypes}`)
     .addFields(
       { name: '🔻 WEAK TO', value: weakStr, inline: false },

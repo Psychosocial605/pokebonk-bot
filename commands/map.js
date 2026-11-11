@@ -21,6 +21,27 @@ const TYPE_EMOJIS = {
   Fairy: "<:Fairy:1570116757849640990>"
 };
 
+const TYPE_COLORS = {
+  Normal: 0x9FA19F,
+  Fighting: 0xFF8000,
+  Flying: 0x81B9EF,
+  Poison: 0x9141CB,
+  Ground: 0x915121,
+  Rock: 0xafa981,
+  Bug: 0x91A119,
+  Ghost: 0x704170,
+  Steel: 0x60A1B8,
+  Fire: 0xE62829,
+  Water: 0x2980EF,
+  Grass: 0x3FA129,
+  Electric: 0xFAC000,
+  Psychic: 0xEF4179,
+  Ice: 0x3FD8FF,
+  Dragon: 0x5060E1,
+  Dark: 0x50413F,
+  Fairy: 0xEF70EF
+};
+
 const GENERATION_MAPS = {
   "Gen 1": {
     "viridian-forest": { name: "Viridian Forest", types: ["Bug", "Grass", "Normal", "Flying"], recommended: ["Fire", "Flying", "Rock", "Ice"], avoid: ["Ground", "Water", "Grass"], description: "Lush woodland filled with swarming bug and grass types, often backed by poison sub-types." },
@@ -44,8 +65,12 @@ function buildMapEmbedAndComponents(selectedGen = "Gen 1", selectedMapKey = "vir
   const recommendedPills = mapData.recommended.map(t => `${TYPE_EMOJIS[t] || ''} **${t}**`).join('   ');
   const avoidPills = mapData.avoid.map(t => `${TYPE_EMOJIS[t] || ''} **${t}**`).join('   ');
 
+  // Pick color based on the first dominant map type
+  const primaryType = mapData.types[0];
+  const embedColor = TYPE_COLORS[primaryType] || 0x3498DB;
+
   const embed = new EmbedBuilder()
-    .setColor(0x3498DB)
+    .setColor(embedColor)
     .setTitle(`🗺️ Area Scout [${selectedGen}] — ${mapData.name}`)
     .setDescription(mapData.description)
     .addFields(

@@ -21,13 +21,25 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   try {
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-    // Registers commands instantly to your Discord test server
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: commands },
-    );
+    // Array of your 2 target server IDs from your .env file
+    const targetGuildIds = [
+      process.env.GUILD_ID_1,
+      process.env.GUILD_ID_2
+    ];
 
-    console.log('Successfully reloaded application (/) commands.');
+    // Loop through both servers and register the commands instantly to each
+    for (const guildId of targetGuildIds) {
+      if (!guildId) continue;
+      
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+        { body: commands },
+      );
+      
+      console.log(`Successfully registered commands to server ID: ${guildId}`);
+    }
+
+    console.log('Successfully reloaded application (/) commands for all target servers.');
   } catch (error) {
     console.error(error);
   }

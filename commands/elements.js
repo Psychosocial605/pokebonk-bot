@@ -47,6 +47,7 @@ function calculateMatchups(type1, type2) {
   const multipliers = {};
   const allTypes = Object.keys(BASE_MATRIX);
 
+  // 1. Calculate Defenses (Weaknesses & Resistances)
   allTypes.forEach(attacker => {
     let mult = 1.0;
     if (BASE_MATRIX[attacker][type1] !== undefined) mult *= BASE_MATRIX[attacker][type1];
@@ -61,14 +62,30 @@ function calculateMatchups(type1, type2) {
     if (m > 1.0) weakTo.push({ type: t, mult: m });
     if (m < 1.0) resists.push({ type: t, mult: m });
   }
-  return { weakTo, resists };
+
+  // 2. Calculate Offense (Strong Against / What this type deals > 1.0 damage to)
+  const strongSet = new Set();
+  const checkOffense = (t) => {
+    if (BASE_MATRIX[t]) {
+      for (const [defender, mult] of Object.entries(BASE_MATRIX[t])) {
+        if (mult > 1.0) strongSet.add(defender);
+      }
+    }
+  };
+  checkOffense(type1);
+  if (type2 !== 'None') checkOffense(type2);
+  const strongAgainst = Array.from(strongSet);
+
+  return { weakTo, resists, strongAgainst };
 }
 
 function buildEmbedAndComponents(type1, type2) {
-  const { weakTo, resists } = calculateMatchups(type1, type2);
+  const { weakTo, resists, strongAgainst } = calculateMatchups(type1, type2);
 
   const weakStr = weakTo.length > 0 ? weakTo.map(w => `${TYPE_EMOJIS[w.type]} \`x${w.mult.toFixed(2)}\``).join('   ') : '`None`';
   const resistStr = resists.length > 0 ? resists.map(r => `${TYPE_EMOJIS[r.type]} \`x${r.mult.toFixed(2)}\``).join('   ') : '`None`';
+  const strongStr = strongAgainst.length > 0 ? strongAgainst.map(t => `${TYPE_EMOJIS[t] || ''} **${t}**`).join('   ') : '`None`';
+
   const titleTypes = type2 !== 'None' ? `${TYPE_EMOJIS[type1]} ${type1} / ${TYPE_EMOJIS[type2]} ${type2}` : `${TYPE_EMOJIS[type1]} ${type1}`;
 
   const embed = new EmbedBuilder()
@@ -76,7 +93,8 @@ function buildEmbedAndComponents(type1, type2) {
     .setTitle(`🛡️ Pokebonk Matchups — ${titleTypes}`)
     .addFields(
       { name: '🔻 WEAK TO', value: weakStr, inline: false },
-      { name: '🛡️ RESISTS', value: resistStr, inline: false }
+      { name: '🛡️ RESISTS', value: resistStr, inline: false },
+      { name: '⚔️ STRONG AGAINST', value: strongStr, inline: false }
     )
     .setFooter({ text: 'PokeBonk Rules • Clamped [x0.40 - x1.80]' });
 

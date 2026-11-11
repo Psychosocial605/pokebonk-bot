@@ -67,15 +67,29 @@ const GENERATION_MAPS = {
       avoid: ["Psychic", "Poison", "Electric"],
       description: "A crystal cavern beneath Cerulean City. The strongest Pokémon in Kanto live here... and something much worse."
     }
+  },
+  "Gen 2": {
+    "ilex-forest": {
+      name: "Ilex Forest",
+      types: ["Bug", "Fairy", "Psychic"],
+      recommended: ["Steel", "Poison", "Fire", "Flying", "Ghost", "Dark"],
+      avoid: ["Fighting", "Dragon", "Psychic"],
+      description: "Millenary trees and a wooden shrine. They say time doesn't always flow in the same direction here."
+    },
+    "ecruteak-city": {
+      name: "Ecruteak City",
+      types: ["Ghost", "Fire", "Normal"],
+      recommended: ["Dark", "Water", "Ground", "Rock", "Fighting"],
+      avoid: ["Ghost", "Psychic", "Normal", "Grass", "Bug", "Steel", "Ice"],
+      description: "Red maples, the ruined Burned Tower and, on the horizon, the Tin Tower. Legendary beasts roam here."
+    }
   }
-  // You can easily add "Gen 2", "Gen 3", etc., here later!
 };
 
 function buildMapEmbedAndComponents(selectedGen = "Gen 1", selectedMapKey = "viridian-forest") {
   const genData = GENERATION_MAPS[selectedGen] || GENERATION_MAPS["Gen 1"];
   const mapData = genData[selectedMapKey] || Object.values(genData)[0];
 
-  // Format type pills with custom server emojis
   const typePills = mapData.types.map(t => `${TYPE_EMOJIS[t] || ''} **${t}**`).join('   ');
   const recommendedPills = mapData.recommended.map(t => `${TYPE_EMOJIS[t] || ''} **${t}**`).join('   ');
   const avoidPills = mapData.avoid.map(t => `${TYPE_EMOJIS[t] || ''} **${t}**`).join('   ');
@@ -91,7 +105,6 @@ function buildMapEmbedAndComponents(selectedGen = "Gen 1", selectedMapKey = "vir
     )
     .setFooter({ text: 'Pokebonk Tactical Mapping • Regional Scout' });
 
-  // Dropdown 1: Generation Selection
   const genMenu = new StringSelectMenuBuilder()
     .setCustomId('select_map_gen')
     .setPlaceholder('Select Generation')
@@ -103,7 +116,6 @@ function buildMapEmbedAndComponents(selectedGen = "Gen 1", selectedMapKey = "vir
       }))
     );
 
-  // Dropdown 2: Map Selection (based on the currently chosen generation)
   const mapMenu = new StringSelectMenuBuilder()
     .setCustomId('select_map_location')
     .setPlaceholder('Select Map Location')
@@ -129,7 +141,10 @@ module.exports = {
       option.setName('generation')
         .setDescription('Select game generation')
         .setRequired(false)
-        .addChoices({ name: 'Gen 1', value: 'Gen 1' }))
+        .addChoices(
+          { name: 'Gen 1', value: 'Gen 1' },
+          { name: 'Gen 2', value: 'Gen 2' }
+        ))
     .addStringOption(option =>
       option.setName('location')
         .setDescription('Select map location')
@@ -140,7 +155,9 @@ module.exports = {
           { name: 'Storm Coast', value: 'storm-coast' },
           { name: 'Celestial Glacier', value: 'celestial-glacier' },
           { name: 'Cinnabar Island', value: 'cinnabar-island' },
-          { name: 'Cerulean Cave', value: 'cerulean-cave' }
+          { name: 'Cerulean Cave', value: 'cerulean-cave' },
+          { name: 'Ilex Forest', value: 'ilex-forest' },
+          { name: 'Ecruteak City', value: 'ecruteak-city' }
         )),
 
   async execute(interaction) {

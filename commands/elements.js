@@ -65,29 +65,31 @@ function calculateMatchups(type1, type2) {
   return { weakTo, resists };
 }
 
-// Calculate Offensive Matchups (Strong Against)
+// Calculate Offensive Matchups (Strong Against) using exact 1.35x offensive lookup
 function calculateOffense(type1, type2) {
-  const strongAgainst = [];
-  const allTypes = Object.keys(BASE_MATRIX);
+  const strongMap = {};
 
-  allTypes.forEach(defender => {
-    let mult1 = 1.0;
-    let mult2 = 1.0;
-
-    if (BASE_MATRIX[type1] && BASE_MATRIX[type1][defender] !== undefined) {
-      mult1 = BASE_MATRIX[type1][defender];
+  const addEffectiveForType = (t) => {
+    if (!BASE_MATRIX[t]) return;
+    for (const [defender, mult] of Object.entries(BASE_MATRIX[t])) {
+      // In Pokebonk charts, offensive effectiveness is 1.35x
+      if (mult === 1.35) {
+        if (!strongMap[defender] || mult > strongMap[defender]) {
+          strongMap[defender] = mult;
+        }
+      }
     }
-    if (type2 !== 'None' && BASE_MATRIX[type2] && BASE_MATRIX[type2][defender] !== undefined) {
-      mult2 = BASE_MATRIX[type2][defender];
-    }
+  };
 
-    let offensiveMult = Math.max(mult1, mult2);
-    if (offensiveMult > 1.0) {
-      strongAgainst.push({ type: defender, mult: Number(offensiveMult.toFixed(2)) });
-    }
-  });
+  addEffectiveForType(type1);
+  if (type2 !== 'None') {
+    addEffectiveForType(type2);
+  }
 
-  return strongAgainst;
+  return Object.entries(strongMap).map(([type, mult]) => ({
+    type,
+    mult: Number(mult.toFixed(2))
+  }));
 }
 
 function buildEmbedAndComponents(type1 = 'Grass', type2 = 'None') {
